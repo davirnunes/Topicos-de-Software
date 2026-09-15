@@ -1,8 +1,8 @@
-"""
-batch_ingest.py — Ingestão em larga escala de documentos no ChromaDB.
+﻿"""
+batch_ingest.py â€” IngestÃ£o em larga escala de documentos no ChromaDB.
 
-Lê TODOS os formatos suportados (.pdf e .txt) da pasta de guidelines,
-faz chunking, gera embeddings com modelo MULTILÍNGUE e insere em lotes.
+LÃª TODOS os formatos suportados (.pdf e .txt) da pasta de guidelines,
+faz chunking, gera embeddings com modelo MULTILÃNGUE e insere em lotes.
 """
 import os
 import hashlib
@@ -12,30 +12,30 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
-# Modelo multilíngue — essencial para textos em português
+# Modelo multilÃ­ngue â€” essencial para textos em portuguÃªs
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 
 def generate_chunk_id(chunk_text: str, source_name: str) -> str:
-    """Hash MD5 do conteúdo + fonte para deduplicação."""
+    """Hash MD5 do conteÃºdo + fonte para deduplicaÃ§Ã£o."""
     payload = f"{source_name}::{chunk_text}".encode("utf-8")
     return hashlib.md5(payload).hexdigest()
 
 
 def load_document(file_path: str):
-    """Escolhe o loader correto com base na extensão."""
+    """Escolhe o loader correto com base na extensÃ£o."""
     ext = os.path.splitext(file_path)[1].lower()
     if ext == ".pdf":
         return PyMuPDFLoader(file_path).load()
     elif ext == ".txt":
         return TextLoader(file_path, encoding="utf-8").load()
     else:
-        print(f"  ⚠ Formato não suportado: {ext} — ignorando {file_path}")
+        print(f"  âš  Formato nÃ£o suportado: {ext} â€” ignorando {file_path}")
         return []
 
 
 def process_documents(raw_dir: str, chunk_size=800, chunk_overlap=120):
-    """Lê todos os PDFs e TXTs do diretório e retorna chunks enriquecidos."""
+    """LÃª todos os PDFs e TXTs do diretÃ³rio e retorna chunks enriquecidos."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -58,7 +58,7 @@ def process_documents(raw_dir: str, chunk_size=800, chunk_overlap=120):
                 c.metadata["chunk_id"] = generate_chunk_id(c.page_content, fname)
             all_chunks.extend(chunks)
         except Exception as e:
-            print(f"  ✗ Erro em {fname}: {e}")
+            print(f"  âœ— Erro em {fname}: {e}")
 
     return all_chunks
 
@@ -70,18 +70,22 @@ def batch_ingest_chroma(chunks, persist_dir: str, batch_size=200):
         return None
 
     print(f"Carregando modelo de embeddings: {EMBEDDING_MODEL}")
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    embeddings = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        encode_kwargs={"normalize_embeddings": True},
+    )
 
     vectorstore = Chroma(
         persist_directory=persist_dir,
         embedding_function=embeddings,
+        collection_metadata={"hnsw:space": "cosine"},
     )
 
     # Deduplica por chunk_id
     unique = {c.metadata["chunk_id"]: c for c in chunks}
     docs = list(unique.values())
     ids = list(unique.keys())
-    print(f"Chunks únicos a inserir: {len(docs)}")
+    print(f"Chunks Ãºnicos a inserir: {len(docs)}")
 
     for i in tqdm(range(0, len(docs), batch_size), desc="Ingerindo lotes"):
         batch_docs = docs[i : i + batch_size]
@@ -89,9 +93,9 @@ def batch_ingest_chroma(chunks, persist_dir: str, batch_size=200):
         try:
             vectorstore.add_documents(documents=batch_docs, ids=batch_ids)
         except Exception as e:
-            print(f"  ✗ Erro no lote {i}–{i+batch_size}: {e}")
+            print(f"  âœ— Erro no lote {i}â€“{i+batch_size}: {e}")
 
-    print("✔ Ingestão concluída.")
+    print("âœ” IngestÃ£o concluÃ­da.")
     return vectorstore
 
 
@@ -102,8 +106,8 @@ def main():
 
     if not os.path.exists(raw_dir):
         os.makedirs(raw_dir, exist_ok=True)
-        print(f"Diretório criado: {raw_dir}")
-        print("Adicione PDFs ou TXTs lá, ou rode o scraper.py primeiro.")
+        print(f"DiretÃ³rio criado: {raw_dir}")
+        print("Adicione PDFs ou TXTs lÃ¡, ou rode o scraper.py primeiro.")
         return
 
     chunks = process_documents(raw_dir)
@@ -112,3 +116,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -17,6 +17,10 @@ import argparse
 import numpy as np
 from datetime import datetime
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # Adiciona o diretório pai ao path para imports relativos
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
@@ -111,7 +115,10 @@ class DiabetesFactChecker:
             if not os.path.exists(self.chroma_dir):
                 print("⚠ ChromaDB não encontrado. Rode batch_ingest.py primeiro.")
                 return
-            embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+            embeddings = HuggingFaceEmbeddings(
+                model_name=EMBEDDING_MODEL,
+                encode_kwargs={"normalize_embeddings": True},
+            )
             self.vectorstore = Chroma(
                 persist_directory=self.chroma_dir,
                 embedding_function=embeddings,

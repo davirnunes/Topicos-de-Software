@@ -1,9 +1,9 @@
-"""
-scraper.py — Raspagem de conteúdo real sobre diabetes e nutrição.
+﻿"""
+scraper.py â€” Raspagem de conteÃºdo real sobre diabetes e nutriÃ§Ã£o.
 
-Coleta textos de fontes oficiais e confiáveis (páginas HTML) e salva
+Coleta textos de fontes oficiais e confiÃ¡veis (pÃ¡ginas HTML) e salva
 como .txt na pasta data/raw/guidelines/ para alimentar o ChromaDB.
-Também raspa exemplos de fake news conhecidas para o dataset de treino.
+TambÃ©m raspa exemplos de fake news conhecidas para o dataset de treino.
 """
 import os
 import re
@@ -24,43 +24,43 @@ TIMEOUT = 20
 
 
 # ====================================================================
-# Fontes oficiais: páginas HTML com conteúdo confiável sobre diabetes
+# Fontes oficiais: pÃ¡ginas HTML com conteÃºdo confiÃ¡vel sobre diabetes
 # ====================================================================
 OFFICIAL_SOURCES = [
     # SBD - Diretrizes individuais (HTML)
     {
-        "url": "https://diretriz.diabetes.org.br/diagnostico-e-tratamento-do-diabetes-tipo-1/",
+        "url": "https://diretriz.diabetes.org.br/tratamento-do-diabetes-mellitus-tipo-1-no-sus/",
         "name": "SBD_diagnostico_tratamento_DM1",
     },
     {
-        "url": "https://diretriz.diabetes.org.br/tratamento-farmacologico-da-hiperglicemia-no-dm2/",
+        "url": "https://diretriz.diabetes.org.br/manejo-do-diabetes-mellitus-tipo-2/",
         "name": "SBD_tratamento_farmacologico_DM2",
     },
     {
-        "url": "https://diretriz.diabetes.org.br/principios-gerais-da-orientacao-nutricional-no-diabetes-mellitus/",
+        "url": "https://diretriz.diabetes.org.br/terapia-nutricional-no-pre-diabetes-e-no-diabetes-mellitus-tipo-2/",
         "name": "SBD_orientacao_nutricional",
     },
     {
-        "url": "https://diretriz.diabetes.org.br/definicao-diagnostico-e-classificacao-do-diabetes-mellitus/",
+        "url": "https://diretriz.diabetes.org.br/diagnostico-de-diabetes-mellitus/",
         "name": "SBD_definicao_diagnostico_classificacao",
     },
     {
-        "url": "https://diretriz.diabetes.org.br/metas-no-tratamento-do-diabetes/",
+        "url": "https://diretriz.diabetes.org.br/metas-de-controle-glicemico/",
         "name": "SBD_metas_tratamento",
     },
     {
-        "url": "https://diretriz.diabetes.org.br/neuropatia-diabetica/",
+        "url": "https://diretriz.diabetes.org.br/diagnostico-e-tratamento-da-neuropatiaperiferica-diabetica/",
         "name": "SBD_neuropatia",
     },
     {
-        "url": "https://diretriz.diabetes.org.br/retinopatia-diabetica/",
+        "url": "https://diretriz.diabetes.org.br/manejo-da-retinopatia-diabetica/",
         "name": "SBD_retinopatia",
     },
     {
         "url": "https://diretriz.diabetes.org.br/doenca-renal-do-diabetes/",
         "name": "SBD_doenca_renal",
     },
-    # Ministério da Saúde
+    # MinistÃ©rio da SaÃºde
     {
         "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/diabetes",
         "name": "MS_diabetes_pagina_principal",
@@ -96,7 +96,7 @@ def fetch_page_text(url: str) -> str | None:
         text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip()
     except Exception as e:
-        print(f"  ✗ Erro ao acessar {url}: {e}")
+        print(f"  âœ— Erro ao acessar {url}: {e}")
         return None
 
 
@@ -105,7 +105,7 @@ def scrape_official_sources(output_dir: str):
     os.makedirs(output_dir, exist_ok=True)
     log_path = os.path.join(output_dir, "scraped_log.json")
 
-    # Carrega log de URLs já raspadas
+    # Carrega log de URLs jÃ¡ raspadas
     scraped = set()
     if os.path.exists(log_path):
         with open(log_path, "r", encoding="utf-8") as f:
@@ -117,23 +117,23 @@ def scrape_official_sources(output_dir: str):
         name = source["name"]
 
         if url in scraped:
-            print(f"  — Já raspado: {name}")
+            print(f"  â€” JÃ¡ raspado: {name}")
             continue
 
-        print(f"  → Raspando: {name} ({url})")
+        print(f"  â†’ Raspando: {name} ({url})")
         text = fetch_page_text(url)
-        if text and len(text) > 200:  # Ignora páginas quase vazias
+        if text and len(text) > 200:  # Ignora pÃ¡ginas quase vazias
             out_path = os.path.join(output_dir, f"{name}.txt")
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(f"Fonte: {url}\n")
-                f.write(f"Título: {name}\n")
+                f.write(f"TÃ­tulo: {name}\n")
                 f.write("=" * 80 + "\n\n")
                 f.write(text)
             scraped.add(url)
             new_count += 1
-            print(f"    ✔ Salvo ({len(text)} chars)")
+            print(f"    âœ” Salvo ({len(text)} chars)")
         else:
-            print(f"    ⚠ Conteúdo insuficiente, ignorado")
+            print(f"    âš  ConteÃºdo insuficiente, ignorado")
 
         time.sleep(1.5)  # Rate-limiting respeitoso
 
@@ -141,7 +141,7 @@ def scrape_official_sources(output_dir: str):
     with open(log_path, "w", encoding="utf-8") as f:
         json.dump(list(scraped), f, indent=2, ensure_ascii=False)
 
-    print(f"\n✔ Raspagem concluída. {new_count} novos documentos salvos.")
+    print(f"\nâœ” Raspagem concluÃ­da. {new_count} novos documentos salvos.")
 
 
 # ====================================================================
@@ -156,7 +156,7 @@ def scrape_fact_checks(output_path: str):
     results = []
 
     for url in urls:
-        print(f"  → Raspando fact-checks: {url}")
+        print(f"  â†’ Raspando fact-checks: {url}")
         try:
             resp = requests.get(url, headers=HEADERS, timeout=TIMEOUT, verify=False)
             resp.raise_for_status()
@@ -174,16 +174,16 @@ def scrape_fact_checks(output_path: str):
                             "source": url.split("/")[2],
                         })
         except Exception as e:
-            print(f"    ✗ Erro: {e}")
+            print(f"    âœ— Erro: {e}")
         time.sleep(1)
 
     if results:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
-        print(f"  ✔ {len(results)} manchetes de fact-check salvas em {output_path}")
+        print(f"  âœ” {len(results)} manchetes de fact-check salvas em {output_path}")
     else:
-        print("  ⚠ Nenhuma manchete encontrada.")
+        print("  âš  Nenhuma manchete encontrada.")
 
 
 # ====================================================================
@@ -202,3 +202,4 @@ if __name__ == "__main__":
     print("ETAPA 2: Raspagem de fact-checks (boatos.org, e-farsas)")
     print("=" * 60)
     scrape_fact_checks(FACTCHECK_PATH)
+
